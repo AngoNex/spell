@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-local SpelList = {
+local SpellList = {
     ["Blink"] = {
         delay = 5,
         cooldown = 0,
@@ -17,26 +17,26 @@ local SpelList = {
 
 hook.Add( "InitPostEntity", "Ready", function()
     local ply = LocalPlayer()
-	ply.TableSpels = ply.TablePhaseSpeTableSpelsls or {}
+	ply.TableSpells = ply.TablePhaseSpeTableSpells or {}
 end )
 
-net.Receive("UpdatePlayerSpel", function()
+net.Receive("UpdatePlayerSpell", function()
     local nettable = net.ReadTable()
 
     local ply = LocalPlayer()
 
     local owner = nettable.owner
-    local spel = nettable.spel
+    local spell = nettable.spell
     local type = nettable.type
 
-    hook.Call("UpdatePlayerSpel", nil, ply, owner, type, spel)
+    hook.Call("UpdatePlayerSpell", nil, ply, owner, type, spell)
 end)
 
-hook.Add( "UpdatePlayerSpel", "UpdatePlayerSpel", function( ply, owner, type, spel )
+hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, spell )
 	if IsValid( ply ) then
         if type == "init" then
             -- добавить обилку в массив игрока
-            -- в том числе и создать объект spel на стороне клиента
+            -- в том числе и создать объект spell на стороне клиента
         end
 
         if type == "cooldown" then

@@ -1,74 +1,72 @@
 
-util.AddNetworkString("UpdatePlayerSpel")
+util.AddNetworkString("UpdatePlayerSpell")
 
-hook.Add( "PlayerInitialSpawn", "Spels_Base_FullLoadSetup", function( ply )
-    ply.TableSpels = ply.TableSpels or {}
+hook.Add( "PlayerInitialSpawn", "Spells_Base_FullLoadSetup", function( ply )
+    ply.TableSpells = ply.TableSpells or {}
 end )
 
-hook.Add( "PlayerButtonDown", "Spels_Base", function( ply, key )
-	if IsValid( ply ) then
-        if IsFirstTimePredicted() and istable( ply.TableSpels ) then
-            local spels = ply.TableSpels
+hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )
+    if IsFirstTimePredicted() and istable( ply.TableSpells ) then
+        local spells = ply.TableSpells
 
-            for name, spel in pairs( spels ) do
-                if key == spel.key and (spel.prefunction != false or spel.postfunction != false) then
+        for name, spell in pairs( spells ) do
+            if key == spell.key and (spell.prefunction != false or spell.postfunction != false) then
 
-                    local nettable = {}
-                    nettable.owner = ply
-                    nettable.spel = name
+                local nettable = {}
+                nettable.owner = ply
+                nettable.spell = name
 
-                    if spel.prefunction != false then
-                        nettable.type = "pre"
-                        spel.prefunction( ply )
-                    elseif spel.postfunction != false then
-                        nettable.type = "post"
-                        spel.postfunction( ply )
-                    else
-                        return
-                    end
-
-                    if spel.sendtoclient then
-                        nettable.sendtoclient = spel.sendtoclient
-                    end
-
-                    if istable( nettable ) then
-                        net.Start("UpdatePlayerSpel")
-                            net.WriteTable( nettable )
-                        if nettable.sendtoclient then
-                            net.Send( nettable.owner )
-                        else
-                            net.Broadcast()
-                        end
-                    end
-
+                if spell.prefunction != false then
+                    nettable.type = "pre"
+                    spell.prefunction( ply )
+                elseif spell.postfunction != false then
+                    nettable.type = "post"
+                    spell.postfunction( ply )
+                else
                     return
                 end
+
+                if spell.sendtoclient then
+                    nettable.sendtoclient = spel.sendtoclient
+                end
+
+                if istable( nettable ) then
+                    net.Start("UpdatePlayerSpell")
+                        net.WriteTable( nettable )
+                    if nettable.sendtoclient then
+                        net.Send( nettable.owner )
+                    else
+                        net.Broadcast()
+                    end
+                end
+
+                return
             end
-            return "not key"
         end
-	end
+        return "not key"
+    end
 end)
 
-hook.Add( "PlayerButtonUp", "Spels_Base", function( ply, key )
+hook.Add( "PlayerButtonUp", "Spells_Base", function( ply, key )
 	if IsValid( ply ) then
-        if IsFirstTimePredicted() and istable( ply.TableSpels ) then
-            local spels = ply.TableSpels
+        if IsFirstTimePredicted() and istable( ply.TableSpells ) then
+            local spells = ply.TableSpells
 
-            for name, spel in pairs( spels ) do
-                if key == spel.key and spel.postfunction != false and spel.prefunction != false then
-                    isfunction( spel.postfunction( ply ) )
+            for name, spell in pairs( spells ) do
+                if key == spell.key and spel.postfunction != false and spell.prefunction != false then
+                    isfunction( spell.postfunction( ply ) )
 
                     local nettable = {}
                     nettable.owner = ply
-                    nettable.spel = name
+                    nettable.spell = name
                     nettable.type = "post"
 
-                    if spel.sendtoclient then
-                        nettable.sendtoclient = spel.sendtoclient
+                    if spell.sendtoclient then
+                        nettable.sendtoclient = spell.sendtoclient
                     end
 
                     if istable( nettable ) then
-                        net.Start("UpdatePlayerSpel")
+                        net.Start("UpdatePlayerSpell")
                             net.WriteTable( nettable )
                         if nettable.sendtoclient then
                             net.Send( nettable.owner )
