@@ -22,7 +22,7 @@ end)
 
 hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, spellkey, event )
 	if IsValid( ply ) and IsValid( owner ) then
-        owner.TableSpells = owner.TableSpells or {}
+        owner.TableSpells = (type == "refresh" and {} ) or owner.TableSpells or {}
         local spell = owner.TableSpells[spellkey]
         if type == "init" then
             -- добавить обилку в массив игрока
@@ -49,6 +49,7 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
 
                 if type == "remove" then
                     -- удаляет обилку из массива игрока
+                    owner.TableSpells[spellkey] = nil
                 end
 
                 if type == "event" then
@@ -124,6 +125,7 @@ function PlayerSpellHudToggle( bool )
                         local cd =  ( spell.cooldown - CurTime() ) / spell.delay
                         surface.SetDrawColor( 255,255,255,55)
                         surface.DrawRect( x + i * (sw + 2), y - sh, sw, sh * cd )
+                        draw.SimpleText( math.Round( spell.cooldown - CurTime(), 1), "DermaLarge", x + i * (sw + 2) + sw/2, y - sh + sh/2, color_White, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
                     end
                     i = i + 1
                 end

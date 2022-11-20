@@ -18,9 +18,34 @@ function GiveSpell( ply, spell )
     end
 end
 
+function SpellRefresh( ply )
+    ply.TableSpells = {}
+    local nettable = {}
+    nettable.owner = ply
+    nettable.type = "refresh"
+
+    if istable( nettable ) then
+        net.Start("UpdatePlayerSpell")
+            net.WriteTable( nettable )
+        net.Send( nettable.owner )
+    end
+    
+end
+
 function RemoveSpell( ply, spell )
     if istable( ply.TableSpells ) and isspell( spell ) then
-        table.remove( ply.TableSpells, spell.name)
+        ply.TableSpells[spell.name] = nil
+
+        local nettable = {}
+        nettable.owner = ply
+        nettable.name = spell.name
+        nettable.type = "remove"
+
+        if istable( nettable ) then
+            net.Start("UpdatePlayerSpell")
+                net.WriteTable( nettable )
+            net.Send( nettable.owner )
+        end
     end
 end
 
