@@ -3,7 +3,7 @@ util.AddNetworkString("UpdatePlayerSpell")
 
 function GiveSpell( ply, spell )
     if istable( ply.TableSpells ) and isspell( spell ) then
-        ply.TableSpells[spell.name] = spell
+        ply.TableSpells[spell.name] =  table.Copy( spell )
 
         local nettable = {}
         nettable.owner = ply
@@ -45,12 +45,13 @@ end
 hook.Add( "PlayerInitialSpawn", "Spells_Base_FullLoadSetup", function( ply )
     ply.TableSpells = ply.TableSpells or {}
     GiveSpell( ply, SPELL_blink)
+    GiveSpell( ply, SPELL_reverse)
+
 end )
 
 hook.Add( "PlayerLoadout", "Spells_Base_FullLoadSetup", function( ply )
     GiveSpell( ply, SPELL_blink)
-    GiveSpell( ply, SPELL_bl)
-    GiveSpell( ply, SPELL_b)
+    GiveSpell( ply, SPELL_reverse)
 end )
 
 hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )
@@ -66,19 +67,19 @@ hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )
 
                     if spell.prefunction != false and spell.prefunction != true then
                         nettable.type = "pre"
-                        isfunction( spell.prefunction( ply ) )
+                        isfunction( spell.prefunction( ply, spell ) )
                     elseif spell.prefunction == true then
                         nettable.type = "pre"
                     elseif spell.postfunction != false then
                         nettable.type = "post"
-                        isfunction( spell.postfunction( ply ) )
+                        isfunction( spell.postfunction( ply, spell ) )
                         SpellCooldown( ply, spell )
                     else
                         return
                     end
 
                     if spell.sendtoclient then
-                        nettable.sendtoclient = spel.sendtoclient
+                        nettable.sendtoclient = spel.sendtoclientpre
                     end
 
                     if istable( nettable ) then
@@ -106,7 +107,7 @@ hook.Add( "PlayerButtonUp", "Spells_Base", function( ply, key )
             for name, spell in pairs( spells ) do
                 if key == spell.key and spell.postfunction != false and spell.prefunction != false then
                     if SpellIsReady( ply, spell ) then
-                        isfunction( spell.postfunction( ply ) )
+                        isfunction( spell.postfunction( ply, spell ) )
                         SpellCooldown( ply, spell )
 
                         local nettable = {}
@@ -115,7 +116,7 @@ hook.Add( "PlayerButtonUp", "Spells_Base", function( ply, key )
                         nettable.type = "post"
 
                         if spell.sendtoclient then
-                            nettable.sendtoclient = spell.sendtoclient
+                            nettable.sendtoclient = spell.sendtoclientpost
                         end
 
                         if istable( nettable ) then

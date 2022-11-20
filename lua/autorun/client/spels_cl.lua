@@ -22,15 +22,15 @@ end)
 
 hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, spellkey, event )
 	if IsValid( ply ) and IsValid( owner ) then
+        owner.TableSpells = owner.TableSpells or {}
         local spell = owner.TableSpells[spellkey]
-        if owner == ply then
-            if type == "init" then
-                -- добавить обилку в массив игрока
-                -- в том числе и создать объект spell на стороне клиента
-                owner.TableSpells[spellkey] = owner.TableSpells[spellkey] or {}
-                table.CopyFromTo( SPELL_LIST[spellkey], owner.TableSpells[spellkey])
-            end
+        if type == "init" then
+            -- добавить обилку в массив игрока
+            -- в том числе и создать объект spell на стороне клиента
+            owner.TableSpells[spellkey] = owner.TableSpells[spellkey] or {}
+            table.CopyFromTo( SPELL_LIST[spellkey], owner.TableSpells[spellkey])
         end
+
 
         if istable( spell ) then
             if owner == ply then
@@ -52,15 +52,17 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
                 end
 
                 if type == "event" then
-                    -- удаляет обилку из массива игрока
+                    -- вызов при ивенте
                 end
             end
 
             if type == "pre" then
                 -- включить пре функцию ( например отрисовка траектории )
                 -- выключение пре функции должно быть либо при начале пост функции либо при отмене
-                if spell.prefunction != false then
+                if spell.prefunction != false and  spell.pretype == "render" then
                     table.insert( DrawTable, spell.prefunction )
+                else
+                    spell.prefunction( owner, spell )
                 end
             end
 
@@ -75,7 +77,9 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
                 -- if spell.postfunction != false then
                 --     table.insert( DrawTable, spell.postfunction )
                 -- end
-                spell.postfunction( owner )
+                if spell.postfunction ~= false then
+                    spell.postfunction( owner, spell )
+                end
             end
         end
 
@@ -98,14 +102,14 @@ function PlayerSpellHudToggle( bool )
             if IsValid(ply) then
                 local count = table.Count(ply.TableSpells)
                 local size = sw * count
-                local x = ( w - size)/2
+                local x = ( w - (size + 2))/2
                 local i = 0
 
                 for name, spell in pairs( ply.TableSpells ) do
                     local y = h
 
                     surface.SetDrawColor( 0,0,0)
-                    surface.DrawRect( x + i * sw, y - sh, sw, sh )
+                    surface.DrawRect( x + i * (sw + 2), y - sh, sw, sh )
 
                     surface.SetDrawColor( 55,55,55)
                     if spell.icon ~= nil then
@@ -114,12 +118,12 @@ function PlayerSpellHudToggle( bool )
                         draw.NoTexture()
                     end
                     local mult = ( spell.iconSize or 1 )
-                    surface.DrawTexturedRectRotated( x + i * sw + sw/2, y - sh + sh/2, sw * mult , sh * mult, 0 )
+                    surface.DrawTexturedRectRotated( x + i * (sw + 2) + sw/2, y - sh + sh/2, sw * mult , sh * mult, 0 )
 
                     if spell.cooldown ~= nil and !SpellIsReady( ply, spell ) then
                         local cd =  ( spell.cooldown - CurTime() ) / spell.delay
                         surface.SetDrawColor( 255,255,255,55)
-                        surface.DrawRect( x + i * sw, y - sh, sw, sh * cd )
+                        surface.DrawRect( x + i * (sw + 2), y - sh, sw, sh * cd )
                     end
                     i = i + 1
                 end
