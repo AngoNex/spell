@@ -42,7 +42,7 @@ function SpellCooldown( ply, spell )
     end
 end
 
-hook.Add( "PlayerInitialSpawn", "Spells_Base_FullLoadSetup", function( ply )
+hook.Add( "PlayerInitialized", "Spells_Base_FullLoadSetup", function( ply )
     ply.TableSpells = ply.TableSpells or {}
     GiveSpell( ply, SPELL_blink)
     GiveSpell( ply, SPELL_reverse)
