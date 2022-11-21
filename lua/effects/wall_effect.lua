@@ -75,14 +75,16 @@ function EFFECT:Think()
 		end
 	end
 	if self.anim == 2 then
-		for i = 1 , 20 do
+		for i = 1 , 40 do
 			local rand = math.random(1,#self.Particles2)
 			table.insert( self.Particles3, self.Particles2[rand] )
 			table.remove(self.Particles2, rand)
 		end
 		for i = 1, #self.Particles3 do
-			local dot = self.Particles2[math.min(i,#self.Particles2) or 1]
-			dot:SetPos( dot:GetPos() + ( Vector( dot:GetPos()[1], dot:GetPos()[2],self.npos[3] + 300) - dot:GetPos()) / 31.1111 )
+			local dot = self.Particles2[math.min(i,#self.Particles2)]
+			if i <= #self.Particles2 then
+				dot:SetPos( dot:GetPos() + ( Vector( dot:GetPos()[1], dot:GetPos()[2],self.npos[3] + 300) - dot:GetPos()) / 31.1111 )
+			end
 		end
 	end
 	return self.emitter:GetNumActiveParticles() > 0
