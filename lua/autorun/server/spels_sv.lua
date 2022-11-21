@@ -67,6 +67,24 @@ function SpellCooldown( ply, spell )
     end
 end
 
+function SpellCancel( ply, spell )
+    if spell.delay ~= 0 or spell.delay ~= nil then
+        spell.cooldown = CurTime() + 2
+        spell.startime = CurTime()
+    end
+
+    local nettable = {}
+    nettable.owner = ply
+    nettable.name = spell.name
+    nettable.type = "cancel"
+
+    if istable( nettable ) then
+        net.Start("UpdatePlayerSpell")
+            net.WriteTable( nettable )
+        net.Send( nettable.owner )
+    end
+end
+
 hook.Add( "PlayerInitialized", "Spells_Base_FullLoadSetup", function( ply )
     ply.TableSpells = ply.TableSpells or {}
     GiveSpell( ply, SPELL_blink)

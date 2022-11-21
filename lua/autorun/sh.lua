@@ -53,7 +53,7 @@ end
 
 SPELL_blink = AddSpell( "Blink" )
 
-SPELL_blink:Set( "delay", 20 )
+SPELL_blink:Set( "delay", 5 )
 SPELL_blink:Set( "cooldown", 0 )
 SPELL_blink:Set( "timestart", 0 )
 SPELL_blink:Set( "charges", 1 )
@@ -61,9 +61,19 @@ SPELL_blink:Set( "key", KEY_G )
 SPELL_blink:Set( "sendtoclientpost", true )
 
 if SERVER then
-    SPELL_blink:Set( "prefunction", true)
+    SPELL_blink:Set( "prefunction", function(ply, spell)
+        spell.act = false
+        timer.Simple(19,function()
+            if spell.act then
+                
+            else
+                SpellCancel( ply, spell )
+            end
+        end)
+    end)
     SPELL_blink:Set( "postfunction", function( ply, spell  )
         if IsValid( ply ) then
+            spell.act = true
             local uptrace = util.TraceLine({start = ply:EyePos(),
             endpos = ply:EyePos()+Vector(0,0,500000),
             filter = self,
@@ -100,7 +110,6 @@ if CLIENT then
             spell.iconSize = 0.8 + math.sin(CurTime()*5)*0.1
         end)
 
-
         hook.Add( "PrePlayerDraw", "spellblink", function(pl)
             if pl == ply then
                 render.SetBlend( 0 )
@@ -123,7 +132,6 @@ if CLIENT then
         Effect:SetStart( ply:GetPos() )
         Effect:SetOrigin( UpPos )
         util.Effect("in_phase", Effect)
-
         if ply ~= LocalPlayer() then return end
 
         timer.Simple(1.5,function()
@@ -134,6 +142,7 @@ if CLIENT then
                     LerpPos = 1
                 end
             end)
+            sound.Play( "player/footsteps/wade6.wav", spell.viewpos, 90, 200 )
         end)
         hook.Add("CalcView","blinkvieweffect",function(ply,origin,angles,fov,znear,zfar)
 
@@ -168,9 +177,50 @@ if CLIENT then
         end)
     end)
 
+    SPELL_blink:Set( "cancelfunction", function( ply, spell )
+        timer.Remove("spelliconeblink")
+        local LerpPos = 0
+        local Effect = EffectData()
+        Effect:SetStart( spell.viewpos )
+        Effect:SetOrigin( ply:GetPos() )
+        util.Effect("in_phase", Effect)
+        timer.Simple(1.55,function()
+            timer.Create("LerpPos",0.01,0,function()
+                LerpPos = LerpPos + 0.04
+                if LerpPos>= 1 then
+                    hook.Remove("CalcView","blinkvieweffect")
+                    hook.Remove("PrePlayerDraw","spellblink")
+                    hook.Remove("PostPlayerDraw","spellblink")
+                    hook.Remove("HUDPaint", "BlinkSpell")
+                    timer.Remove("LerpPos")
+
+                    LerpPos = 1
+                end
+            end)
+            sound.Play( "player/footsteps/wade6.wav", spell.viewpos, 90, 200 )
+            hook.Add("CalcView","blinkvieweffect",function(ply,origin,angles,fov,znear,zfar)
+
+                local playerview = LerpVector( LerpPos, spell.viewpos, ply:GetPos() )
+
+                local view = {
+                    origin = playerview,
+                    angles = angles,
+                    fov = fov1 ,
+                    znear = znear,
+                    zfar = zfar,
+                    drawviewer = true
+
+                }
+                return view
+            end)
+        end)
+
+    end)
+
     SPELL_blink:Set( "postfunction", function( ply, spell )
         timer.Remove("spelliconeblink")
         local LerpPos = 0
+        sound.Play( "common/bass.wav", spell.viewpos, 90, 200 )
 
         hook.Remove("HUDPaint","BlinkSpell")
         local Effect = EffectData()
@@ -191,6 +241,7 @@ if CLIENT then
                     LerpPos = 1
                 end
             end)
+            sound.Play( "player/footsteps/wade6.wav", spell.viewpos, 90, 200 )
         end)
 
         hook.Add("CalcView","blinkvieweffect",function(ply,origin,angles,fov,znear,zfar)
@@ -278,7 +329,7 @@ end
 
 SPELL_wall = AddSpell( "Wall" )
 
-SPELL_wall:Set( "delay", 5 )
+SPELL_wall:Set( "delay", 1 )
 SPELL_wall:Set( "cooldown", 0 )
 SPELL_wall:Set( "timestart", 0 )
 SPELL_wall:Set( "charges", 1 )
@@ -306,7 +357,7 @@ if CLIENT then
         hook.Add("HUDPaint", "WallSpell", function()
             local trace = util.TraceHull( {
                 start = ply:EyePos(),
-                endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000000,
+                endpos = ply:EyePos() + ply:EyeAngles():Forward() * 2000,
                 filter = ply,
                 mins = ply:OBBMins(),
                 maxs = ply:OBBMaxs(),

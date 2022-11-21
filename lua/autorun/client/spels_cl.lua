@@ -65,12 +65,17 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
 
             if type == "cancel" then
                 -- отмена пре функции если она была активирована
+                spell.cancelfunction( owner, spell )
+                spell.cooldown = CurTime() + 2
+                spell.startime = CurTime()
+                if spell.iconAnim ~= nil then
+                    isfunction( spell.iconAnim( spell ) )
+                end
             end
 
             if type == "post" then
                 -- включить отсчёт кд ( ну и худ соответственно тоже )
                 -- включить пост функцию ( само действие )
-                table.RemoveByValue( DrawTable, spell.prefunction  )
                 -- if spell.postfunction != false then
                 --     table.insert( DrawTable, spell.postfunction )
                 -- end

@@ -10,7 +10,6 @@ function EFFECT:Init( data )
 	self.Particles = {}
 	self.emitter = ParticleEmitter( vOffset, true )
 
-	sound.Play( "garrysmod/balloon_pop_cute.wav", vOffset, 90, math.random( 90, 120 ) )
 	self.anim = 0
 	timer.Simple(1,function()
 		self.anim = 1
