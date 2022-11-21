@@ -60,11 +60,7 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
             if type == "pre" then
                 -- включить пре функцию ( например отрисовка траектории )
                 -- выключение пре функции должно быть либо при начале пост функции либо при отмене
-                if spell.prefunction != false and  spell.pretype == "render" then
-                    table.insert( DrawTable, spell.prefunction )
-                else
-                    spell.prefunction( owner, spell )
-                end
+                spell.prefunction( owner, spell )
             end
 
             if type == "cancel" then

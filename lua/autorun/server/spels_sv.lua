@@ -71,12 +71,13 @@ hook.Add( "PlayerInitialized", "Spells_Base_FullLoadSetup", function( ply )
     ply.TableSpells = ply.TableSpells or {}
     GiveSpell( ply, SPELL_blink)
     GiveSpell( ply, SPELL_reverse)
-
+    GiveSpell( ply, SPELL_wall)
 end )
 
 hook.Add( "PlayerLoadout", "Spells_Base_FullLoadSetup", function( ply )
     GiveSpell( ply, SPELL_blink)
     GiveSpell( ply, SPELL_reverse)
+    GiveSpell( ply, SPELL_wall)
 end )
 
 hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )

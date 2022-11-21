@@ -53,7 +53,7 @@ end
 
 SPELL_blink = AddSpell( "Blink" )
 
-SPELL_blink:Set( "delay", 5 )
+SPELL_blink:Set( "delay", 20 )
 SPELL_blink:Set( "cooldown", 0 )
 SPELL_blink:Set( "timestart", 0 )
 SPELL_blink:Set( "charges", 1 )
@@ -64,15 +64,25 @@ if SERVER then
     SPELL_blink:Set( "prefunction", true)
     SPELL_blink:Set( "postfunction", function( ply, spell  )
         if IsValid( ply ) then
+            local uptrace = util.TraceLine({start = ply:EyePos(),
+            endpos = ply:EyePos()+Vector(0,0,500000),
+            filter = self,
+            collisiongroup = COLLISION_GROUP_DEBRIS})
+
+            local UpPos = uptrace.HitPos
+
             local trace = util.TraceHull( {
-                start = ply:EyePos(),
-                endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000,
+                start = UpPos - Vector(0,0,ply:OBBMaxs()[3]),
+                endpos = UpPos + ply:EyeAngles():Forward() * 1000000,
                 filter = ply,
                 mins = ply:OBBMins(),
                 maxs = ply:OBBMaxs(),
             } )
             PointPos = trace.HitPos
-            ply:SetPos(PointPos)
+            timer.Simple(1.5,function()
+                ply:SetPos(PointPos)
+                ply:ViewPunch( Angle(10,0,0) )
+            end)
         end
     end)
 end
@@ -85,27 +95,121 @@ if CLIENT then
     SPELL_blink:Set( "iconSize", 1 )
     SPELL_blink:Set( "iconAnim", function( spell )  DefaultAnim( spell ) end)
     SPELL_blink:Set( "pretype", "render" )
-    SPELL_blink:Set( "prefunction", function( ply )
+    SPELL_blink:Set( "prefunction", function( ply, spell )
+        timer.Create("spelliconeblink",0.01,0,function()
+            spell.iconSize = 0.8 + math.sin(CurTime()*5)*0.1
+        end)
 
-        local trace = util.TraceHull( {
-			start = ply:EyePos(),
-			endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000,
-			filter = ply,
-			mins = ply:OBBMins(),
-			maxs = ply:OBBMaxs(),
-		} )
-		PointPos = trace.HitPos
 
-		cam.Start3D()
-			render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
-		cam.End3D()
+        hook.Add( "PrePlayerDraw", "spellblink", function(pl)
+            if pl == ply then
+                render.SetBlend( 0 )
+            end
+        end)
 
+        hook.Add( "PostPlayerDraw", "spellblink", function()
+            render.SetBlend( 1 )
+        end)
+
+        spell.viewpos = ply:EyePos()
+        local uptrace = util.TraceLine({start = ply:EyePos(),
+        endpos = ply:EyePos()+Vector(0,0,500000),
+        filter = self,
+        collisiongroup = COLLISION_GROUP_DEBRIS})
+        local LerpPos = 0
+        local UpPos = uptrace.HitPos - Vector(0,0,ply:OBBMaxs()[3])
+
+        local Effect = EffectData()
+        Effect:SetStart( ply:GetPos() )
+        Effect:SetOrigin( UpPos )
+        util.Effect("in_phase", Effect)
+
+        if ply ~= LocalPlayer() then return end
+
+        timer.Simple(1.5,function()
+            timer.Create("LerpPos",0.01,0,function()
+                LerpPos = LerpPos + 0.08
+                if LerpPos>= 1 then
+                    timer.Remove("LerpPos")
+                    LerpPos = 1
+                end
+            end)
+        end)
+        hook.Add("CalcView","blinkvieweffect",function(ply,origin,angles,fov,znear,zfar)
+
+            local playerview = LerpVector( LerpPos, origin, UpPos )
+            spell.viewpos = playerview
+            local view = {
+                origin = playerview,
+                angles = angles,
+                fov = fov ,
+                znear = znear,
+                zfar = zfar,
+                drawviewer = true
+
+            }
+            return view
+        end)
+
+
+        hook.Add("HUDPaint", "BlinkSpell", function()
+            local trace = util.TraceHull( {
+                start = UpPos,
+                endpos = UpPos + ply:EyeAngles():Forward() * 1000000,
+                filter = ply,
+                mins = ply:OBBMins(),
+                maxs = ply:OBBMaxs(),
+            } )
+            local PointPos = trace.HitPos
+            spell.pos = PointPos
+            cam.Start3D()
+                render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
+            cam.End3D()
+        end)
     end)
 
-    SPELL_blink:Set( "postfunction", function( ply )
+    SPELL_blink:Set( "postfunction", function( ply, spell )
+        timer.Remove("spelliconeblink")
+        local LerpPos = 0
+
+        hook.Remove("HUDPaint","BlinkSpell")
         local Effect = EffectData()
-        Effect:SetEntity( ply )
+        Effect:SetStart( spell.viewpos )
+        Effect:SetOrigin( spell.pos + Vector(0,0,40) )
+        if ply ~= LocalPlayer() then return end
         util.Effect("in_phase", Effect)
+        local fov1 = 20
+        timer.Simple(1.55,function()
+            timer.Create("LerpPos",0.01,0,function()
+                LerpPos = LerpPos + 0.04
+                if LerpPos>= 1 then
+                    hook.Remove("CalcView","blinkvieweffect")
+                    hook.Remove("PrePlayerDraw","spellblink")
+                    hook.Remove("PostPlayerDraw","spellblink")
+                    timer.Remove("LerpPos")
+
+                    LerpPos = 1
+                end
+            end)
+        end)
+
+        hook.Add("CalcView","blinkvieweffect",function(ply,origin,angles,fov,znear,zfar)
+
+            local playerview = LerpVector( LerpPos, spell.viewpos, spell.pos + Vector(0,0,70) )
+            fov1 = fov1 + 1
+
+            local view = {
+                origin = playerview,
+                angles = angles,
+                fov = fov1 ,
+                znear = znear,
+                zfar = zfar,
+                drawviewer = true
+
+            }
+            return view
+        end)
+
     end)
 end
 
@@ -115,7 +219,7 @@ SPELL_reverse:Set( "delay", 15 )
 SPELL_reverse:Set( "cooldown", 0 )
 SPELL_reverse:Set( "timestart", 0 )
 SPELL_reverse:Set( "charges", 1 )
-SPELL_reverse:Set( "key", KEY_T )
+--SPELL_reverse:Set( "key", KEY_T )
 SPELL_reverse:Set( "sendtoclientpost", true )
 
 if SERVER then
@@ -168,8 +272,61 @@ if CLIENT then
 
     SPELL_reverse:Set( "postfunction", function( ply )
         timer.Remove("spellReverse")
-        local Effect = EffectData()
-        Effect:SetEntity( ply )
-        util.Effect("in_phase", Effect)
     end)
 end
+
+
+SPELL_wall = AddSpell( "Wall" )
+
+SPELL_wall:Set( "delay", 5 )
+SPELL_wall:Set( "cooldown", 0 )
+SPELL_wall:Set( "timestart", 0 )
+SPELL_wall:Set( "charges", 1 )
+SPELL_wall:Set( "key", KEY_T )
+SPELL_wall:Set( "sendtoclientpost", true )
+
+if SERVER then
+    SPELL_wall:Set( "prefunction", function( ply, spell )
+    end)
+
+    SPELL_wall:Set( "postfunction", function( ply, spell  )
+    end)
+end
+
+if CLIENT then
+    SPELL_wall:Set( "icon", Material( "https://i.imgur.com/MTcuCIh.png", "smooth") )
+    SPELL_wall:Set( "iconSize", 1 )
+    SPELL_wall:Set( "iconAnim", function( spell )  DefaultAnim( spell ) end)
+
+    SPELL_wall:Set( "prefunction", function( ply, spell )
+        timer.Create("SPELL_wall_icon",0.01,0,function()
+            spell.iconSize = 0.8 + math.sin(CurTime()*5)*0.1
+        end)
+
+        hook.Add("HUDPaint", "WallSpell", function()
+            local trace = util.TraceHull( {
+                start = ply:EyePos(),
+                endpos = ply:EyePos() + ply:EyeAngles():Forward() * 1000000,
+                filter = ply,
+                mins = ply:OBBMins(),
+                maxs = ply:OBBMaxs(),
+            } )
+            local PointPos = trace.HitPos
+            spell.PointPos = PointPos
+            cam.Start3D()
+                render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
+            cam.End3D()
+        end)
+
+    end)
+
+    SPELL_wall:Set( "postfunction", function( ply, spell )
+        hook.Remove("HUDPaint","WallSpell")
+        timer.Remove("SPELL_wall_icon")
+        local Effect = EffectData()
+        Effect:SetStart( spell.PointPos )
+        Effect:SetOrigin( ply:GetPos() )
+        util.Effect("wall_effect", Effect)
+    end)
+end
+
