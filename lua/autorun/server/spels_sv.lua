@@ -93,6 +93,7 @@ hook.Add( "PlayerInitialized", "Spells_Base_FullLoadSetup", function( ply )
 end )
 
 hook.Add( "PlayerLoadout", "Spells_Base_FullLoadSetup", function( ply )
+    --SpellRefresh( ply )
     GiveSpell( ply, SPELL_blink)
     GiveSpell( ply, SPELL_reverse)
     GiveSpell( ply, SPELL_wall)
