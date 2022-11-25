@@ -19,7 +19,7 @@ function EFFECT:Init( data )
 	end)
 	timer.Simple(3,function()
 		self.anim = 3
-		for i = 1, #self.Particles do
+		for i = 1, math.min(#self.Particles , self.emitter:GetNumActiveParticles()) do
 			local rand = math.random(0,360)
 			local Pos = Vector( math.sin(rand)*math.Rand( -1, 1 ), math.cos(rand)*math.Rand( -1, 1 ), math.Rand( -1, 1 ) )
 			self.Particles[i]:SetVelocity( Pos * 30 )
@@ -68,20 +68,20 @@ function EFFECT:Init( data )
 
 
 
-	local dlight = DynamicLight( self )
+	-- local dlight = DynamicLight( self )
 
-	if ( dlight ) then
+	-- if ( dlight ) then
 
-		dlight.Pos = vOffset
-		dlight.r = 255
-		dlight.g = 255
-		dlight.b = 255
-		dlight.Brightness = 10
-		dlight.Size = 512
-		dlight.DieTime = CurTime() + 0.02
-		dlight.Decay = 512
+	-- 	dlight.Pos = vOffset
+	-- 	dlight.r = 255
+	-- 	dlight.g = 255
+	-- 	dlight.b = 255
+	-- 	dlight.Brightness = 10
+	-- 	dlight.Size = 512
+	-- 	dlight.DieTime = CurTime() + 0.02
+	-- 	dlight.Decay = 512
 
-	end
+	-- end
 
 
 
@@ -90,14 +90,14 @@ end
 function EFFECT:Think()
 
 	if self.anim == 1 then
-		for i = 1, #self.Particles do
+		for i = 1, math.min(#self.Particles , self.emitter:GetNumActiveParticles()) do
 
 			self.Particles[i]:SetPos( self.Particles[i]:GetPos() + ( self.npos - self.Particles[i]:GetPos()) / 6.1111 )
 		end
 	end
 	if self.anim == 2 then
-		if #self.Particles > 30 then
-			for i = 1 , math.random(1,#self.Particles/20) do
+		if #self.Particles > 30  then
+			for i = 1 , math.min(math.random(1,#self.Particles/20) , self.emitter:GetNumActiveParticles()) do
 				local rand = math.random(1,#self.Particles)
 				self.Particles[rand]:SetEndAlpha( 55 )
 				self.Particles[rand]:SetGravity( Vector( 0, 0, -20 ) )
