@@ -13,7 +13,7 @@ function GiveSpell( ply, spell )
         if istable( nettable ) then
             net.Start("UpdatePlayerSpell")
                 net.WriteTable( nettable )
-            net.Send( nettable.owner )
+            net.Broadcast()
         end
     end
 end
@@ -123,8 +123,8 @@ hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )
                         return
                     end
 
-                    if spell.sendtoclient then
-                        nettable.sendtoclient = spel.sendtoclientpre
+                    if spell.sendtoclientpre then
+                        nettable.sendtoclient = spell.sendtoclientpre
                     end
 
                     if istable( nettable ) then
@@ -132,6 +132,7 @@ hook.Add( "PlayerButtonDown", "Spells_Base", function( ply, key )
                         net.WriteTable( nettable )
                         if nettable.sendtoclient then
                             net.Broadcast()
+                            print("send "..nettable.name)
                         else
                             net.Send( nettable.owner )
                         end
@@ -160,8 +161,9 @@ hook.Add( "PlayerButtonUp", "Spells_Base", function( ply, key )
                         nettable.name = spell.name
                         nettable.type = "post"
 
-                        if spell.sendtoclient then
+                        if spell.sendtoclientpost then
                             nettable.sendtoclient = spell.sendtoclientpost
+                            print("daa")
                         end
 
                         if istable( nettable ) then
@@ -169,6 +171,7 @@ hook.Add( "PlayerButtonUp", "Spells_Base", function( ply, key )
                                 net.WriteTable( nettable )
                             if nettable.sendtoclient then
                                 net.Broadcast()
+                                print("send "..nettable.name)
                             else
                                 net.Send( nettable.owner )
                             end

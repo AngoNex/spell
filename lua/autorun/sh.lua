@@ -59,6 +59,7 @@ SPELL_blink:Set( "timestart", 0 )
 SPELL_blink:Set( "charges", 1 )
 SPELL_blink:Set( "key", KEY_G )
 SPELL_blink:Set( "sendtoclientpost", true )
+SPELL_blink:Set( "sendtoclientpre", true )
 
 if SERVER then
     SPELL_blink:Set( "prefunction", function(ply, spell)
@@ -132,6 +133,24 @@ if CLIENT then
         Effect:SetStart( ply:GetPos() )
         Effect:SetOrigin( UpPos )
         util.Effect("in_phase", Effect)
+
+        hook.Add("HUDPaint", "BlinkSpell", function()
+            local trace = util.TraceHull( {
+                start = UpPos,
+                endpos = UpPos + ply:EyeAngles():Forward() * 1000000,
+                filter = ply,
+                mins = ply:OBBMins(),
+                maxs = ply:OBBMaxs(),
+            } )
+            local PointPos = trace.HitPos
+            spell.pos = PointPos
+            if ply == LocalPlayer() then
+                cam.Start3D()
+                    render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
+                cam.End3D()
+            end
+        end)
+
         if ply ~= LocalPlayer() then return end
 
         timer.Simple(1.5,function()
@@ -158,22 +177,6 @@ if CLIENT then
 
             }
             return view
-        end)
-
-
-        hook.Add("HUDPaint", "BlinkSpell", function()
-            local trace = util.TraceHull( {
-                start = UpPos,
-                endpos = UpPos + ply:EyeAngles():Forward() * 1000000,
-                filter = ply,
-                mins = ply:OBBMins(),
-                maxs = ply:OBBMaxs(),
-            } )
-            local PointPos = trace.HitPos
-            spell.pos = PointPos
-            cam.Start3D()
-                render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
-            cam.End3D()
         end)
     end)
 
@@ -270,8 +273,9 @@ SPELL_reverse:Set( "delay", 15 )
 SPELL_reverse:Set( "cooldown", 0 )
 SPELL_reverse:Set( "timestart", 0 )
 SPELL_reverse:Set( "charges", 1 )
---SPELL_reverse:Set( "key", KEY_T )
+SPELL_reverse:Set( "key", KEY_H )
 SPELL_reverse:Set( "sendtoclientpost", true )
+SPELL_reverse:Set( "sendtoclientpre", true )
 
 if SERVER then
     SPELL_reverse:Set( "prefunction", function( ply, spell )
@@ -284,21 +288,21 @@ if SERVER then
         spell.trail = util.SpriteTrail(ply, attach_id, ply:GetPlayerColor(), true, 17, 60, 20, 1 / ( 17 + 80 ) * 0.5, "sprites/tp_beam001")
 
         spell.Health = ply:Health()
-        timer.Create("spellReverse",0.05,0,function()
+        timer.Create("spellReverse"..ply:GetName(),0.05,0,function()
             table.insert( spell.Reverse, {ply:GetPos(), ply:EyeAngles()} )
         end)
     end)
 
     SPELL_reverse:Set( "postfunction", function( ply, spell  )
-        timer.Remove("spellReverse")
+        timer.Remove("spellReverse"..ply:GetName())
         local iteration = #spell.Reverse
         if iteration > 1 then
-            timer.Create("spellReverse",0.01,0,function()
+            timer.Create("spellReverse"..ply:GetName(),0.01,0,function()
                 ply:SetPos( spell.Reverse[ iteration ][1])
                 ply:SetEyeAngles( spell.Reverse[ iteration ][2] )
                 iteration = math.max( 1,iteration - 1 )
                 if iteration <= 1 then
-                    timer.Remove("spellReverse")
+                    timer.Remove("spellReverse"..ply:GetName())
                     SafeRemoveEntity(spell.trail)
                     spell.Reverse = {}
                     ply:SetHealth(spell.Health)
@@ -335,6 +339,7 @@ SPELL_wall:Set( "timestart", 0 )
 SPELL_wall:Set( "charges", 1 )
 SPELL_wall:Set( "key", KEY_T )
 SPELL_wall:Set( "sendtoclientpost", true )
+SPELL_wall:Set( "sendtoclientpre", true )
 
 if SERVER then
     SPELL_wall:Set( "prefunction", function( ply, spell )
@@ -364,9 +369,11 @@ if CLIENT then
             } )
             local PointPos = trace.HitPos
             spell.PointPos = PointPos
-            cam.Start3D()
-                render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
-            cam.End3D()
+            if LocalPlayer() == ply then
+                cam.Start3D()
+                    render.DrawWireframeBox( PointPos, Angle(0,ply:EyeAngles()[2],0), ply:OBBMins(), ply:OBBMaxs(), color_white )
+                cam.End3D()
+            end
         end)
 
     end)

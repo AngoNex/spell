@@ -79,6 +79,7 @@ hook.Add( "UpdatePlayerSpell", "UpdatePlayerSpell", function( ply, owner, type, 
                 -- if spell.postfunction != false then
                 --     table.insert( DrawTable, spell.postfunction )
                 -- end
+                print(" а вот и спел прилетел")
                 if spell.postfunction ~= false then
                     spell.postfunction( owner, spell )
                 end
